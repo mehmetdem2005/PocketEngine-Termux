@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: pocketengine-server
+    env: docker
+    region: frankfurt
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DB_PATH
+        value: /data/pocket.db
+    disk:
+      name: pocketengine-data
+      mountPath: /data
+      sizeGB: 1
