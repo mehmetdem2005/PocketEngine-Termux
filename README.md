@@ -31,6 +31,9 @@
 geliştirebileceğiniz, masaüstü sınıfı bir C++ oyun motorudur. Unity'nin
 editor paradigmasından ilham almıştır:
 
+> ✅ **Backend canlı**: https://pocketengine-server.onrender.com
+> ✅ **GitHub repo**: https://github.com/mehmetdem2005/PocketEngine-Termux
+
 - 🪟 **Yatay (landscape) editor layout** — Hierarchy, Scene, Inspector, Project, Console, Profiler
 - 🧠 **Yüksek performanslı ECS** — Sparse-set tabanlı, cache-friendly
 - 🎨 **OpenGL ES 3.0 batch renderer** — 4096 quad/batch, 16 texture slot
