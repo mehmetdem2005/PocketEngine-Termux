@@ -171,6 +171,14 @@ public:
     usize entityCount() const noexcept { return m_alive.size(); }
     usize componentTypeCount() const noexcept { return m_stores.size(); }
 
+    // Destroy all entities and clear all component stores
+    void clear() noexcept {
+        for (auto& [tid, store] : m_stores) delete store;
+        m_stores.clear();
+        m_alive.clear();
+        m_next = 1;
+    }
+
 private:
     template <typename T>
     static u64 typeIndex() noexcept {

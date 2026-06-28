@@ -52,13 +52,13 @@ bool Editor::init(platform::Window* window) noexcept {
 
     // Default scene with a camera + test sprite
     auto cam = m_scene.world.create();
-    m_scene.world.add<ecs::Tag>(cam, {"Main Camera"});
-    m_scene.world.add<ecs::Camera>(cam, {});
+    m_scene.world.add<ecs::Tag>(cam, ecs::Tag{"Main Camera"});
+    m_scene.world.add<ecs::Camera>(cam, ecs::Camera{});
 
     auto sprite1 = m_scene.world.create();
-    m_scene.world.add<ecs::Tag>(sprite1, {"Player"});
-    m_scene.world.add<ecs::Transform>(sprite1, {0, 0, 0, 0,0,0, 1,1,1});
-    m_scene.world.add<ecs::Sprite>(sprite1, {0, 1, 1, 0,0,1,1, {1,1,1,1}});
+    m_scene.world.add<ecs::Tag>(sprite1, ecs::Tag{"Player"});
+    m_scene.world.add<ecs::Transform>(sprite1, ecs::Transform{0, 0, 0, 0,0,0, 1,1,1});
+    m_scene.world.add<ecs::Sprite>(sprite1, ecs::Sprite{0, 1, 1, 0,0,1,1, {1,1,1,1}});
 
     PK_LOG_INFO("Editor", "Editor initialized");
     return true;
@@ -152,9 +152,9 @@ void Editor::dockspaceLayout() noexcept {
     m_dockspaceId = ImGui::GetID("PocketDockspace");
     if (!m_dockspaceBuilt) {
         m_dockspaceBuilt = true;
-        ImGui::DockBuilder_RemoveNode(m_dockspaceId);
-        ImGui::DockBuilder_AddNode(m_dockspaceId, ImGuiDockNodeFlags_DockSpace);
-        ImGui::DockBuilder_SetNodeSize(m_dockspaceId, vp->WorkSize);
+        ImGui::DockBuilderRemoveNode(m_dockspaceId);
+        ImGui::DockBuilderAddNode(m_dockspaceId, ImGuiDockNodeFlags_DockSpace);
+        ImGui::DockBuilderSetNodeSize(m_dockspaceId, vp->WorkSize);
 
         // Unity-like layout for landscape
         ImGuiID main = m_dockspaceId;
@@ -199,19 +199,19 @@ void Editor::drawMainMenuBar() noexcept {
         if (ImGui::BeginMenu("GameObject")) {
             if (ImGui::MenuItem("Create Empty")) {
                 auto e = m_scene.world.create();
-                m_scene.world.add<ecs::Tag>(e, {"GameObject"});
-                m_scene.world.add<ecs::Transform>(e, {});
+                m_scene.world.add<ecs::Tag>(e, ecs::Tag{"GameObject"});
+                m_scene.world.add<ecs::Transform>(e, ecs::Transform{});
             }
             if (ImGui::MenuItem("Create Sprite")) {
                 auto e = m_scene.world.create();
-                m_scene.world.add<ecs::Tag>(e, {"Sprite"});
-                m_scene.world.add<ecs::Transform>(e, {});
-                m_scene.world.add<ecs::Sprite>(e, {});
+                m_scene.world.add<ecs::Tag>(e, ecs::Tag{"Sprite"});
+                m_scene.world.add<ecs::Transform>(e, ecs::Transform{});
+                m_scene.world.add<ecs::Sprite>(e, ecs::Sprite{});
             }
             if (ImGui::MenuItem("Create Camera")) {
                 auto e = m_scene.world.create();
-                m_scene.world.add<ecs::Tag>(e, {"Camera"});
-                m_scene.world.add<ecs::Camera>(e, {});
+                m_scene.world.add<ecs::Tag>(e, ecs::Tag{"Camera"});
+                m_scene.world.add<ecs::Camera>(e, ecs::Camera{});
             }
             ImGui::EndMenu();
         }
@@ -261,8 +261,8 @@ void Editor::drawHierarchyPanel() noexcept {
     if (ImGui::BeginPopup("AddMenu")) {
         if (ImGui::MenuItem("Empty")) {
             auto e = m_scene.world.create();
-            m_scene.world.add<ecs::Tag>(e, {"GameObject"});
-            m_scene.world.add<ecs::Transform>(e, {});
+            m_scene.world.add<ecs::Tag>(e, ecs::Tag{"GameObject"});
+            m_scene.world.add<ecs::Transform>(e, ecs::Transform{});
         }
         ImGui::EndPopup();
     }
@@ -343,10 +343,10 @@ void Editor::drawInspectorPanel() noexcept {
 
     if (ImGui::Button("+ Add Component")) ImGui::OpenPopup("AddComp");
     if (ImGui::BeginPopup("AddComp")) {
-        if (ImGui::MenuItem("Transform")) m_scene.world.add<ecs::Transform>(m_selectedEntity);
-        if (ImGui::MenuItem("Sprite"))    m_scene.world.add<ecs::Sprite>(m_selectedEntity);
-        if (ImGui::MenuItem("Camera"))    m_scene.world.add<ecs::Camera>(m_selectedEntity);
-        if (ImGui::MenuItem("RigidBody")) m_scene.world.add<ecs::RigidBody>(m_selectedEntity);
+        if (ImGui::MenuItem("Transform")) m_scene.world.add<ecs::Transform>(m_selectedEntity, ecs::Transform{});
+        if (ImGui::MenuItem("Sprite"))    m_scene.world.add<ecs::Sprite>(m_selectedEntity, ecs::Sprite{});
+        if (ImGui::MenuItem("Camera"))    m_scene.world.add<ecs::Camera>(m_selectedEntity, ecs::Camera{});
+        if (ImGui::MenuItem("RigidBody")) m_scene.world.add<ecs::RigidBody>(m_selectedEntity, ecs::RigidBody{});
         ImGui::EndPopup();
     }
 
@@ -442,7 +442,7 @@ void Editor::drawAssetBrowserPanel() noexcept {
     auto& assets = pk::asset::assets().assets();
     float sz = 64;
     float pad = 8;
-    float avail = ImGui::GetContentRegionAvailWidth();
+    float avail = ImGui::GetContentRegionAvail().x;
     int perRow = (int)(avail / (sz + pad));
     if (perRow < 1) perRow = 1;
     for (usize i = 0; i < assets.size(); ++i) {
@@ -523,7 +523,10 @@ void Editor::drawStatusBar() noexcept {
 }
 
 void Editor::newScene() noexcept {
-    m_scene = scene::Scene{};
+    m_scene.name = "Untitled";
+    m_scene.paused = false;
+    m_scene.timeScale = 1.0f;
+    m_scene.world.clear();
     PK_LOG_INFO("Editor", "New scene created");
 }
 
