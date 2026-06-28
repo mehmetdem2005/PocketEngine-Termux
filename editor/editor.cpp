@@ -92,28 +92,17 @@ void Editor::run() noexcept {
     f32 camZoom = 5.0f;
 
     PK_LOG_INFO("Editor", "run() entered - starting main loop");
-    int frameCount = 0;
 
     while (!window.shouldClose()) {
         window.pollEvents();
-        PK_LOG_DEBUG("Editor", "frame %d: after pollEvents", frameCount);
 
         auto fb = window.framebufferSize();
         rdr.setViewport(0, 0, fb.x, fb.y);
         rdr.setClearColor(0.05f, 0.05f, 0.07f, 1.0f);
         rdr.clear();
-        PK_LOG_DEBUG("Editor", "frame %d: after clear", frameCount);
 
         // Begin ImGui
         ui::beginImGuiFrame();
-        PK_LOG_DEBUG("Editor", "frame %d: after beginImGuiFrame", frameCount);
-
-        // TEST: minimal - just show a demo window to verify ImGui works
-        ImGui::ShowDemoWindow();
-        PK_LOG_DEBUG("Editor", "frame %d: after ShowDemoWindow", frameCount);
-
-        // Skip the rest for now - isolate the crash
-#if 0
         dockspaceLayout();
         drawMainMenuBar();
         drawToolbar();
@@ -129,15 +118,13 @@ void Editor::run() noexcept {
 
         if (m_showImGuiDemo) ImGui::ShowDemoWindow();
 
-        // Game view rendering (separate FBO would be ideal; we share main here)
-        // Compute camera matrix
+        // Game view rendering - 2D sprites
         f32 aspect = (f32)fb.x / (f32)fb.y;
         auto vp = math::ortho(-camZoom * aspect + camX, camZoom * aspect + camX,
                               -camZoom + camY, camZoom + camY,
                               -100, 100);
 
         rdr.beginScene(vp);
-        // Render all sprites
         m_scene.world.each<ecs::Transform, ecs::Sprite>(
             [&](EntityID, ecs::Transform& t, ecs::Sprite& s) {
                 rdr.drawSprite(s.textureID, t.x - s.width * 0.5f * t.sx,
@@ -148,25 +135,14 @@ void Editor::run() noexcept {
             });
         rdr.endScene();
 
-        // Camera controls
+        // Camera controls (arrow keys)
         if (window.keyPressed(262)) camX += 0.05f;   // right
         if (window.keyPressed(263)) camX -= 0.05f;   // left
         if (window.keyPressed(265)) camY += 0.05f;   // up
         if (window.keyPressed(264)) camY -= 0.05f;   // down
-#endif
 
         ui::endImGuiFrame();
-        PK_LOG_DEBUG("Editor", "frame %d: after endImGuiFrame", frameCount);
-
         window.swapBuffers();
-        PK_LOG_DEBUG("Editor", "frame %d: after swapBuffers", frameCount);
-        frameCount++;
-
-        // Safety: stop after 5 frames to see logs
-        if (frameCount >= 5) {
-            PK_LOG_INFO("Editor", "Survived 5 frames - success!");
-            break;
-        }
     }
 }
 

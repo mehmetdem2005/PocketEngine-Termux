@@ -9,7 +9,7 @@
 int main(int argc, char** argv) {
     using namespace pk;
 
-    log::setLevel(log::Level::Debug);
+    log::setLevel(log::Level::Info);
 
     platform::WindowDesc desc;
     desc.width     = 1280;

@@ -65,21 +65,14 @@ void shutdownImGui() noexcept {
 }
 
 void beginImGuiFrame() noexcept {
-    PK_LOG_DEBUG("ImGui", "beginImGuiFrame: calling ImGui_ImplOpenGL3_NewFrame");
     ImGui_ImplOpenGL3_NewFrame();
-    PK_LOG_DEBUG("ImGui", "beginImGuiFrame: calling ImGui_ImplGlfw_NewFrame");
     ImGui_ImplGlfw_NewFrame();
-    PK_LOG_DEBUG("ImGui", "beginImGuiFrame: calling ImGui::NewFrame");
     ImGui::NewFrame();
-    PK_LOG_DEBUG("ImGui", "beginImGuiFrame: done");
 }
 
 void endImGuiFrame() noexcept {
-    PK_LOG_DEBUG("ImGui", "endImGuiFrame: calling ImGui::Render");
     ImGui::Render();
-    PK_LOG_DEBUG("ImGui", "endImGuiFrame: calling ImGui_ImplOpenGL3_RenderDrawData");
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    PK_LOG_DEBUG("ImGui", "endImGuiFrame: done");
 
     ImGuiIO& io = ImGui::GetIO();
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
