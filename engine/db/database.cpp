@@ -62,7 +62,7 @@ void Database::Stmt::finalize() noexcept {
 }
 void Database::Stmt::bind(int idx, i32 v) noexcept { sqlite3_bind_int(handle, idx, v); }
 void Database::Stmt::bind(int idx, i64 v) noexcept { sqlite3_bind_int64(handle, idx, v); }
-void Database::Stmt::bind(int idx, f32 v) noexcept { sqlite3_bind_double(handle, idx, (f64)v); }
+void Database::Stmt::bind(int idx, f32 v) noexcept { sqlite3_bind_double(handle, idx, static_cast<double>(v)); }
 void Database::Stmt::bind(int idx, f64 v) noexcept { sqlite3_bind_double(handle, idx, v); }
 void Database::Stmt::bind(int idx, const String& v) noexcept { sqlite3_bind_text(handle, idx, v.c_str(), -1, SQLITE_TRANSIENT); }
 void Database::Stmt::bind(int idx, const char* v) noexcept { sqlite3_bind_text(handle, idx, v, -1, SQLITE_TRANSIENT); }
@@ -70,7 +70,7 @@ void Database::Stmt::bind(int idx) noexcept { sqlite3_bind_null(handle, idx); }
 
 i32 Database::Stmt::getInt(int idx) const noexcept { return sqlite3_column_int(handle, idx); }
 i64 Database::Stmt::getInt64(int idx) const noexcept { return sqlite3_column_int64(handle, idx); }
-f32 Database::Stmt::getFloat(int idx) const noexcept { return (f32)sqlite3_column_double(handle, idx); }
+f32 Database::Stmt::getFloat(int idx) const noexcept { return static_cast<f32>(sqlite3_column_double(handle, idx)); }
 String Database::Stmt::getString(int idx) const noexcept {
     const unsigned char* s = sqlite3_column_text(handle, idx);
     return s ? String(reinterpret_cast<const char*>(s)) : String{};

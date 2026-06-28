@@ -101,19 +101,19 @@ class PoolAllocator {
 public:
     PoolAllocator(usize blockSize, usize blockCount, usize alignment = 16)
         : m_blockSize(((blockSize + alignment - 1) / alignment) * alignment)
-        , m_blockCount(blockCount)
         , m_capacity(m_blockSize * blockCount)
         , m_buffer(static_cast<u8*>(std::malloc(m_capacity)))
         , m_freeList(nullptr) {
         if (!m_buffer) throw std::bad_alloc();
-        // Build free list
+        // Build free list - each block's first sizeof(void*) bytes point to next free block
         for (usize i = 0; i < blockCount; ++i) {
             u8* block = m_buffer + i * m_blockSize;
-            *reinterpret_cast<u8**>(block) = (i + 1 < blockCount)
-                ? (m_buffer + (i + 1) * m_blockSize)
+            void* next = (i + 1 < blockCount)
+                ? static_cast<void*>(m_buffer + (i + 1) * m_blockSize)
                 : nullptr;
+            *reinterpret_cast<void**>(block) = next;
         }
-        m_freeList = reinterpret_cast<void**>(m_buffer);
+        m_freeList = m_buffer;  // first block
     }
 
     ~PoolAllocator() { std::free(m_buffer); }
@@ -134,7 +134,7 @@ public:
         if (!p) return;
         std::lock_guard<std::mutex> lk(m_mutex);
         *reinterpret_cast<void**>(p) = m_freeList;
-        m_freeList = reinterpret_cast<void**>(p);
+        m_freeList = p;
         trackDeallocate(m_blockSize);
     }
 
@@ -143,10 +143,9 @@ public:
 
 private:
     usize       m_blockSize;
-    usize       m_blockCount;
     usize       m_capacity;
     u8*         m_buffer;
-    void**      m_freeList;
+    void*       m_freeList;
     std::mutex  m_mutex;
 };
 

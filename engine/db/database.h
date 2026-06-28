@@ -10,9 +10,17 @@
 
 #ifdef POCKET_HAS_SQLITE
 #include <sqlite3.h>
+// sqlite3.h defines SQLITE_TRANSIENT as ((sqlite3_destructor_type)-1)
+// which triggers -Wold-style-cast. Redefine it safely.
+#ifdef SQLITE_TRANSIENT
+#undef SQLITE_TRANSIENT
+#endif
+#define SQLITE_TRANSIENT (reinterpret_cast<sqlite3_destructor_type>(-1))
 #else
 typedef struct sqlite3 sqlite3;
 typedef struct sqlite3_stmt sqlite3_stmt;
+typedef void (*sqlite3_destructor_type)(void*);
+#define SQLITE_TRANSIENT (reinterpret_cast<sqlite3_destructor_type>(-1))
 #endif
 
 namespace pk::db {

@@ -7,7 +7,15 @@
 #include "core/types.h"
 #include "renderer/renderer.h"
 
-#include "stb/stb_image.h"
+// stb_image is included (with IMPLEMENTATION) only in asset_manager.cpp
+// Forward-declare the functions we use:
+extern "C" {
+typedef unsigned char stbi_uc;
+stbi_uc *stbi_load(const char *filename, int *x, int *y, int *channels_in_file, int desired_channels);
+stbi_uc *stbi_load_from_memory(const stbi_uc *buffer, int len, int *x, int *y, int *channels_in_file, int desired_channels);
+void     stbi_image_free(void *retval_from_stbi_load);
+void     stbi_set_flip_vertically_on_load(int flag_true_if_should_flip);
+}
 
 namespace pk::asset {
 

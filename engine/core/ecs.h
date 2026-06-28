@@ -121,6 +121,13 @@ public:
     }
 
     template <typename T>
+    const T* get(EntityID e) const noexcept {
+        auto* store = findStore<T>();
+        if (!store) return nullptr;
+        return store->get(e.value);
+    }
+
+    template <typename T>
     bool has(EntityID e) const noexcept {
         auto* store = findStore<T>();
         return store ? store->contains(e.value) : false;
@@ -141,15 +148,34 @@ public:
         auto* driver = findStore<First>();
         if (!driver) return;
 
-        auto* stores = std::make_tuple(findStore<Ts>()...);
+        auto stores = std::make_tuple(findStore<Ts>()...);
         // If any store missing, abort
-        bool allValid = (... && (std::get<ComponentStore<Ts>*>(*stores) != nullptr));
+        bool allValid = (... && (std::get<ComponentStore<Ts>*>(stores) != nullptr));
         if (!allValid) return;
 
         for (usize i = 0; i < driver->denseIds().size(); ++i) {
             u64 eid = driver->denseIds()[i];
-            // Get all components for this entity
-            auto ptrs = std::make_tuple(std::get<ComponentStore<Ts>*>(*stores)->get(eid)...);
+            auto ptrs = std::make_tuple(std::get<ComponentStore<Ts>*>(stores)->get(eid)...);
+            bool ok = (... && (std::get<Ts*>(ptrs) != nullptr));
+            if (!ok) continue;
+            fn(EntityID{eid}, *std::get<Ts*>(ptrs)...);
+        }
+    }
+
+    // Const version of each
+    template <typename... Ts, typename Fn>
+    void each(Fn&& fn) const noexcept {
+        using First = std::tuple_element_t<0, std::tuple<Ts...>>;
+        auto* driver = findStore<First>();
+        if (!driver) return;
+
+        auto stores = std::make_tuple(findStore<Ts>()...);
+        bool allValid = (... && (std::get<ComponentStore<Ts>*>(stores) != nullptr));
+        if (!allValid) return;
+
+        for (usize i = 0; i < driver->denseIds().size(); ++i) {
+            u64 eid = driver->denseIds()[i];
+            auto ptrs = std::make_tuple(std::get<ComponentStore<Ts>*>(stores)->get(eid)...);
             bool ok = (... && (std::get<Ts*>(ptrs) != nullptr));
             if (!ok) continue;
             fn(EntityID{eid}, *std::get<Ts*>(ptrs)...);
@@ -167,10 +193,17 @@ private:
     }
 
     template <typename T>
-    ComponentStore<T>* findStore() const noexcept {
+    ComponentStore<T>* findStore() noexcept {
         auto it = m_stores.find(typeIndex<T>());
         if (it == m_stores.end()) return nullptr;
         return static_cast<ComponentStore<T>*>(it->second);
+    }
+
+    template <typename T>
+    const ComponentStore<T>* findStore() const noexcept {
+        auto it = m_stores.find(typeIndex<T>());
+        if (it == m_stores.end()) return nullptr;
+        return static_cast<const ComponentStore<T>*>(it->second);
     }
 
     template <typename T>
