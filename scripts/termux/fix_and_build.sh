@@ -3,7 +3,6 @@
 #  fix_and_build.sh - TEK KOMUTLA KURTARMA
 #  Debian proot içine tüm eksik dependency'leri yükler,
 #  ImGui'yi clone eder, stb_image çeker, build alır.
-#  Telefonunuzda çalıştırın.
 # ============================================================
 set -e
 
@@ -74,18 +73,30 @@ cmake /home/pocket/PocketEngine-Termux \
     -DPOCKET_USE_SQLITE=ON 2>&1 | tail -30
 
 echo ""
-echo "=== NINJA BUILD ==="
-ninja 2>&1 | tail -60
+echo "=== NINJA BUILD (full output to build.log) ==="
+ninja 2>&1 | tee /home/pocket/build.log | tail -10
+BUILD_EXIT=$?
 
 echo ""
 echo "============================================================"
 echo "  BUILD RESULT"
 echo "============================================================"
-ls -la /home/pocket/PocketEngine-build/bin/ 2>&1
-echo ""
 if [ -x /home/pocket/PocketEngine-build/bin/pocketeditor ]; then
     echo "✅ SUCCESS! Editor built."
+    ls -la /home/pocket/PocketEngine-build/bin/
+    echo ""
     echo "Run: bash /home/pocket/PocketEngine-Termux/scripts/termux/run_editor.sh"
 else
-    echo "❌ FAILED. Look at errors above and paste them to me."
+    echo "❌ FAILED."
+    echo ""
+    echo "=== ACTUAL ERRORS (filtered from build.log) ==="
+    grep -E "error:|FAILED:" /home/pocket/build.log | head -30
+    echo ""
+    echo "=== Last 30 lines of build.log ==="
+    tail -30 /home/pocket/PocketEngine-build/build.log 2>/dev/null || tail -30 /home/pocket/build.log
+    echo ""
+    echo "Full log: /home/pocket/build.log"
+    echo "To see all: cat /home/pocket/build.log"
 fi
+
+exit $BUILD_EXIT
