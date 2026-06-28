@@ -146,13 +146,13 @@ public:
     }
 
     // Iterate all entities that have ALL of Ts...
-    // Simple, safe implementation. Use first type as driver.
+    // Simple, portable implementation. No std::apply - just index-based.
     template <typename... Ts, typename Fn>
     void each(Fn&& fn) noexcept {
         // Single-type fast path
         if constexpr (sizeof...(Ts) == 1) {
             using T = std::tuple_element_t<0, std::tuple<Ts...>>;
-            auto* store = findStore<T>();
+            ComponentStore<T>* store = findStore<T>();
             if (!store) return;
             auto& data = store->data();
             auto& ids  = store->denseIds();
@@ -162,30 +162,60 @@ public:
             return;
         }
 
-        // Multi-type path: iterate first type, lookup others
+        // Multi-type path: iterate first type, lookup others by index
         using First = std::tuple_element_t<0, std::tuple<Ts...>>;
         ComponentStore<First>* driver = findStore<First>();
         if (!driver) return;
 
-        // Get pointer to each store
+        // Array of store pointers (one per type, in order)
         std::tuple<ComponentStore<Ts>*...> stores{findStore<Ts>()...};
-        bool all_present = std::apply([](auto*... s) { return (... && (s != nullptr)); }, stores);
+
+        // Check all non-null - use a helper
+        bool all_present = checkAllNonNull(stores, std::index_sequence_for<Ts...>{});
         if (!all_present) return;
 
+        // For each entity in driver
         auto& driver_ids = driver->denseIds();
         for (usize i = 0; i < driver_ids.size(); ++i) {
             u64 eid = driver_ids[i];
-            // Get all components for this entity
-            auto ptrs = std::apply([eid](auto*... s) {
-                return std::make_tuple(s->get(eid)...);
-            }, stores);
+            // Get pointers to all components for this entity
+            auto ptrs = getComponents<Ts...>(stores, eid, std::index_sequence_for<Ts...>{});
             // Check all non-null
-            bool ok = std::apply([](auto*... p) { return (... && (p != nullptr)); }, ptrs);
+            bool ok = checkAllNonNullPtrs(ptrs, std::index_sequence_for<Ts...>{});
             if (!ok) continue;
-            // Dereference and call
-            std::apply([&](auto*... p) { fn(EntityID{eid}, *p...); }, ptrs);
+            // Call fn with dereferenced components
+            callFnWithComponents<Ts...>(fn, eid, ptrs, std::index_sequence_for<Ts...>{});
         }
     }
+
+private:
+    // Helper: check all store pointers non-null
+    template <typename Tuple, usize... Is>
+    bool checkAllNonNull(const Tuple& t, std::index_sequence<Is...>) noexcept {
+        return (... && (std::get<Is>(t) != nullptr));
+    }
+
+    // Helper: check all component pointers non-null
+    template <typename Tuple, usize... Is>
+    bool checkAllNonNullPtrs(const Tuple& t, std::index_sequence<Is...>) noexcept {
+        return (... && (std::get<Is>(t) != nullptr));
+    }
+
+    // Helper: get all component pointers for an entity
+    template <typename... Ts, typename Tuple, usize... Is>
+    auto getComponents(const Tuple& stores, u64 eid, std::index_sequence<Is...>) noexcept {
+        return std::make_tuple(
+            std::get<Is>(stores)->get(eid)...
+        );
+    }
+
+    // Helper: call fn with dereferenced components
+    template <typename... Ts, typename Fn, typename Tuple, usize... Is>
+    void callFnWithComponents(Fn& fn, u64 eid, const Tuple& ptrs, std::index_sequence<Is...>) noexcept {
+        fn(EntityID{eid}, (*std::get<Is>(ptrs))...);
+    }
+
+public:
 
     usize entityCount() const noexcept { return m_alive.size(); }
     usize componentTypeCount() const noexcept { return m_stores.size(); }
@@ -199,10 +229,13 @@ public:
     }
 
 private:
+    // Type-unique ID generator. Each T gets a unique u64.
+    // Uses a static per-T counter via the address of a static function-local.
     template <typename T>
     static u64 typeIndex() noexcept {
-        static const u64 id = []{ static u64 x = 0; return ++x; }();
-        return id;
+        // Each T instantiation gets its own static variable, whose address is unique
+        static char dummy = 0;
+        return reinterpret_cast<u64>(&dummy);
     }
 
     template <typename T>
