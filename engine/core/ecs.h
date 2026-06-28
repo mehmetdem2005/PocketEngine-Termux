@@ -146,25 +146,32 @@ public:
     }
 
     // Iterate all entities that have ALL of Ts...
-    // Simple, correct, portable implementation
+    // Driver-based: iterate first type's dense array, lookup others.
     template <typename... Ts, typename Fn>
     void each(Fn&& fn) noexcept {
         // Use first type as driver
         using First = std::tuple_element_t<0, std::tuple<Ts...>>;
-        auto* driver = findStore<First>();
+        ComponentStore<First>* driver = findStore<First>();
         if (!driver) return;
 
-        auto stores = std::make_tuple(findStore<Ts>()...);
-        // If any store missing, abort
-        bool allValid = (... && (std::get<ComponentStore<Ts>*>(stores) != nullptr));
-        if (!allValid) return;
+        // Get all stores (must exist)
+        auto stores_tuple = std::make_tuple(findStore<Ts>()...);
+        bool all_present = std::apply([](auto*... s) { return (... && (s != nullptr)); }, stores_tuple);
+        if (!all_present) return;
 
-        for (usize i = 0; i < driver->denseIds().size(); ++i) {
-            u64 eid = driver->denseIds()[i];
-            auto ptrs = std::make_tuple(std::get<ComponentStore<Ts>*>(stores)->get(eid)...);
-            bool ok = (... && (std::get<Ts*>(ptrs) != nullptr));
+        // Iterate driver's dense id list
+        const auto& dense_ids = driver->denseIds();
+        for (usize i = 0; i < dense_ids.size(); ++i) {
+            u64 eid = dense_ids[i];
+            // For each type, get component pointer
+            auto ptrs_tuple = std::make_tuple(
+                std::get<ComponentStore<Ts>*>(stores_tuple)->get(eid)...
+            );
+            // Check all non-null
+            bool ok = std::apply([](auto*... p) { return (... && (p != nullptr)); }, ptrs_tuple);
             if (!ok) continue;
-            fn(EntityID{eid}, *std::get<Ts*>(ptrs)...);
+            // Call fn with entity + all components dereferenced
+            std::apply([&](auto*... p) { fn(EntityID{eid}, *p...); }, ptrs_tuple);
         }
     }
 
