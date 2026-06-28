@@ -78,11 +78,25 @@ constexpr const char* kBatchFragSrc = R"(
     void main() {
         int idx = int(vTexIndex + 0.5);
         vec4 tex = vec4(1.0);
-        if (idx > 0) {
-            // Manual switch because dynamic indexing is not portable on ES3
-            for (int i = 0; i < 16; ++i) {
-                if (i == idx) { tex = texture(uTextures[i], vUV); break; }
-            }
+        // GLSL ES 3.0 requires constant sampler array indexing.
+        // Use a switch statement with literal indices.
+        switch (idx) {
+            case 1:  tex = texture(uTextures[1],  vUV); break;
+            case 2:  tex = texture(uTextures[2],  vUV); break;
+            case 3:  tex = texture(uTextures[3],  vUV); break;
+            case 4:  tex = texture(uTextures[4],  vUV); break;
+            case 5:  tex = texture(uTextures[5],  vUV); break;
+            case 6:  tex = texture(uTextures[6],  vUV); break;
+            case 7:  tex = texture(uTextures[7],  vUV); break;
+            case 8:  tex = texture(uTextures[8],  vUV); break;
+            case 9:  tex = texture(uTextures[9],  vUV); break;
+            case 10: tex = texture(uTextures[10], vUV); break;
+            case 11: tex = texture(uTextures[11], vUV); break;
+            case 12: tex = texture(uTextures[12], vUV); break;
+            case 13: tex = texture(uTextures[13], vUV); break;
+            case 14: tex = texture(uTextures[14], vUV); break;
+            case 15: tex = texture(uTextures[15], vUV); break;
+            default: tex = vec4(1.0);  // idx == 0: solid color (white 1x1)
         }
         oColor = vColor * tex;
     }

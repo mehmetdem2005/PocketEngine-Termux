@@ -25,6 +25,9 @@
 #include "imgui_internal.h"
 
 #include <chrono>
+#include <cstdlib>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 namespace pk::editor {
 
@@ -42,13 +45,24 @@ bool Editor::init(platform::Window* window) noexcept {
     auto fb = window->framebufferSize();
     rnd::renderer().init(fb.x, fb.y);
 
-    // Init DB
+    // Init DB - use POCKET_DATA env var, fallback to ~/.pocket_data
     auto& db = pk::db::engineDB();
-    db.open("/data/data/com.termux/files/home/pocket_data/engine.db");
-    db.initEngineSchema();
+    const char* dataEnv = std::getenv("POCKET_DATA");
+    String dataDir = dataEnv ? dataEnv : String(getenv("HOME")) + "/.pocket_data";
+    // Ensure directory exists
+    ::mkdir(dataDir.c_str(), 0755);
+    String dbPath = dataDir + "/engine.db";
+    if (!db.open(dbPath)) {
+        PK_LOG_WARN("Editor", "Failed to open DB at %s - continuing without DB", dbPath.c_str());
+    } else {
+        db.initEngineSchema();
+    }
 
     // Init asset manager root
-    pk::asset::assets().setRoot("/data/data/com.termux/files/home/pocket_assets");
+    const char* assetEnv = std::getenv("POCKET_ASSETS");
+    String assetDir = assetEnv ? assetEnv : String(getenv("HOME")) + "/.pocket_assets";
+    ::mkdir(assetDir.c_str(), 0755);
+    pk::asset::assets().setRoot(assetDir);
 
     // Default scene with a camera + test sprite
     auto cam = m_scene.world.create();
