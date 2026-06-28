@@ -38,6 +38,11 @@ using f64 = double;
 using String       = std::string;
 using StringView   = std::string_view;
 
+// 2D/3D/4D vector templates (used widely before math.h is included)
+template <typename T> struct Vec2 { T x{}, y{}; };
+template <typename T> struct Vec3 { T x{}, y{}, z{}; };
+template <typename T> struct Vec4 { T x{}, y{}, z{}, w{}; };
+
 template <typename T> using Vec     = std::vector<T>;
 template <typename T, usize N> using Arr = std::array<T, N>;
 template <typename K, typename V> using Map = std::unordered_map<K, V>;

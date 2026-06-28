@@ -25,13 +25,14 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     libfreetype6-dev libpng-dev libjpeg-dev
 echo "  -> apt deps OK"
 
-# Step 2: ImGui (en son stable)
-echo "[2/6] Installing ImGui (latest)..."
+# Step 2: ImGui (docking branch - required for editor dockspace)
+echo "[2/6] Installing ImGui (docking branch)..."
 if [ ! -f /opt/imgui/imgui.h ]; then
     rm -rf /opt/imgui
-    git clone --depth 1 --branch v1.91.5 https://github.com/ocornut/imgui.git /opt/imgui
+    git clone --depth 1 --branch docking https://github.com/ocornut/imgui.git /opt/imgui
 fi
 echo "  -> ImGui at $(ls /opt/imgui/imgui.h 2>&1)"
+echo "  -> Branch: $(cd /opt/imgui && git branch --show-current 2>&1)"
 
 # Step 3: Verify pkg-config libs
 echo "[3/6] Verifying pkg-config..."

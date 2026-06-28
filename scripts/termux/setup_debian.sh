@@ -52,10 +52,10 @@ if [ ! -d /opt/bullet3 ]; then
     ninja install
 fi
 
-# 4) ImGui (latest)
-echo "[4/9] Installing ImGui..."
+# 4) ImGui (docking branch - required for editor dockspace)
+echo "[4/9] Installing ImGui (docking branch)..."
 if [ ! -d /opt/imgui ]; then
-    git clone --depth 1 https://github.com/ocornut/imgui.git /opt/imgui
+    git clone --depth 1 --branch docking https://github.com/ocornut/imgui.git /opt/imgui
 fi
 
 # 5) sol2 (Lua bindings)

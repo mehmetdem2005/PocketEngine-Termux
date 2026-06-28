@@ -27,7 +27,7 @@ String esc(const String& s) {
 }
 }
 
-bool saveScene(const Scene& s, const String& path) noexcept {
+bool saveScene(Scene& s, const String& path) noexcept {
     std::ofstream f(path);
     if (!f) {
         PK_LOG_ERROR("Scene", "Cannot open %s for writing", path.c_str());

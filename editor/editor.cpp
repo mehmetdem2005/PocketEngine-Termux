@@ -2,13 +2,13 @@
 //  pocket/editor/editor.cpp
 //  Unity-style landscape editor - main entry
 // ============================================================
-#include "editor/editor.h"
-#include "editor/panels/hierarchy.h"
-#include "editor/panels/inspector.h"
-#include "editor/panels/scene_view.h"
-#include "editor/panels/console.h"
-#include "editor/panels/profiler.h"
-#include "editor/panels/asset_browser.h"
+#include "editor.h"
+#include "panels/hierarchy.h"
+#include "panels/inspector.h"
+#include "panels/scene_view.h"
+#include "panels/console.h"
+#include "panels/profiler.h"
+#include "panels/asset_browser.h"
 
 #include "core/log.h"
 #include "core/thread_pool.h"

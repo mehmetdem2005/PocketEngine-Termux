@@ -20,7 +20,9 @@ struct Scene {
 };
 
 // Save/load scene to JSON file
-bool saveScene(const Scene& s, const String& path) noexcept;
+// (non-const Scene& because we iterate components via ECS each<>() which
+// requires non-const access for now)
+bool saveScene(Scene& s, const String& path) noexcept;
 bool loadScene(Scene& s, const String& path) noexcept;
 
 } // namespace pk::scene

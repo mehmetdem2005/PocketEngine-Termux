@@ -2,7 +2,7 @@
 //  pocket/editor/main.cpp
 //  PocketEngine editor entry point
 // ============================================================
-#include "editor/editor.h"
+#include "editor.h"
 #include "core/log.h"
 #include "platform/window.h"
 
