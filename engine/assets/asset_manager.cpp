@@ -1,6 +1,10 @@
 // ============================================================
 //  pocket/engine/assets/asset_manager.cpp
 // ============================================================
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_STATIC
+#include "stb/stb_image.h"
+
 #include "assets/asset_manager.h"
 #include "core/log.h"
 

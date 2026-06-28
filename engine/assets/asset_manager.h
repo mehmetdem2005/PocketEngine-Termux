@@ -7,8 +7,6 @@
 #include "core/types.h"
 #include "renderer/renderer.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_STATIC
 #include "stb/stb_image.h"
 
 namespace pk::asset {

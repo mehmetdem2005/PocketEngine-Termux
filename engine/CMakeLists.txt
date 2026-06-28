@@ -41,7 +41,23 @@ else()
     target_link_libraries(pocketengine PUBLIC OpenGL::GL)
 endif()
 
-target_link_libraries(pocketengine PUBLIC glfw glm)
+target_link_libraries(pocketengine PUBLIC pk_glfw3 pk_glm)
+
+# Manual find for SQLite3 (Debian provides libsqlite3-dev but no CMake config)
+if(POCKET_USE_SQLITE)
+    find_path(SQLITE3_INCLUDE_DIR sqlite3.h)
+    find_library(SQLITE3_LIBRARY sqlite3)
+    if(NOT SQLITE3_INCLUDE_DIR OR NOT SQLITE3_LIBRARY)
+        message(FATAL_ERROR "SQLite3 not found - install libsqlite3-dev")
+    endif()
+    add_library(pk_sqlite3 INTERFACE IMPORTED)
+    set_target_properties(pk_sqlite3 PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${SQLITE3_INCLUDE_DIR}"
+        INTERFACE_LINK_LIBRARIES      "${SQLITE3_LIBRARY}"
+    )
+    target_link_libraries(pocketengine PUBLIC pk_sqlite3)
+    target_compile_definitions(pocketengine PUBLIC POCKET_HAS_SQLITE=1)
+endif()
 
 if(POCKET_USE_BOX2D)
     find_package(Box2D REQUIRED)
@@ -65,12 +81,6 @@ if(POCKET_USE_OPENAL)
     find_package(OpenAL REQUIRED)
     target_link_libraries(pocketengine PUBLIC OpenAL::OpenAL)
     target_compile_definitions(pocketengine PUBLIC POCKET_HAS_OPENAL=1)
-endif()
-
-if(POCKET_USE_SQLITE)
-    find_package(SQLite3 REQUIRED)
-    target_link_libraries(pocketengine PUBLIC SQLite::SQLite3)
-    target_compile_definitions(pocketengine PUBLIC POCKET_HAS_SQLITE=1)
 endif()
 
 # ImGui (vendored)

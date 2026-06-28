@@ -31,8 +31,8 @@ target_include_directories(imgui PUBLIC
     ${IMGUI_DIR}/backends
 )
 
-find_package(glfw3 REQUIRED)
-target_link_libraries(imgui PUBLIC glfw)
+# GLFW3 - use parent project's imported target pk_glfw3
+target_link_libraries(imgui PUBLIC pk_glfw3)
 
 if(POCKET_USE_OPENGL_ES)
     target_link_libraries(imgui PUBLIC OpenGLES3::OpenGLES3 EGL::EGL)

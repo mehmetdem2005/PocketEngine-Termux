@@ -3,8 +3,8 @@
 // ============================================================
 #include "core/alloc.h"
 
-#include <aligned_alloc.h>
 #include <cstdlib>
+#include <malloc.h>
 
 namespace pk::alloc {
 

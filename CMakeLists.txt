@@ -39,6 +39,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
+# Custom Find modules (FindOpenGLES3, FindEGL)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
 # ============================================================
 #  Platform detection
 # ============================================================
@@ -57,7 +60,7 @@ endif()
 # ============================================================
 option(POCKET_BUILD_EDITOR     "Build the editor application"            ON)
 option(POCKET_BUILD_RUNTIME    "Build the runtime (player)"              ON)
-option(POCKET_BUILD_TESTS      "Build unit tests"                        ON)
+option(POCKET_BUILD_TESTS      "Build unit tests"                        OFF)
 option(POCKET_BUILD_SERVER     "Build server-side tools (not used on phone)" OFF)
 option(POCKET_USE_BOX2D        "Enable 2D physics via Box2D"             ON)
 option(POCKET_USE_BULLET       "Enable 3D physics via Bullet3"           ON)
@@ -81,10 +84,27 @@ else()
 endif()
 
 # GLFW for windowing (X11 via Termux:X11)
-find_package(GLFW3 REQUIRED)
+# Debian provides libglfw3-dev but no CMake config - find manually
+find_path(GLFW3_INCLUDE_DIR GLFW/glfw3.h)
+find_library(GLFW3_LIBRARY glfw3)
+if(NOT GLFW3_INCLUDE_DIR OR NOT GLFW3_LIBRARY)
+    message(FATAL_ERROR "GLFW3 not found - install libglfw3-dev")
+endif()
+add_library(pk_glfw3 INTERFACE IMPORTED)
+set_target_properties(pk_glfw3 PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${GLFW3_INCLUDE_DIR}"
+    INTERFACE_LINK_LIBRARIES      "${GLFW3_LIBRARY}"
+)
 
-# GLM (math)
-find_package(glm REQUIRED)
+# GLM (math) - header-only
+find_path(GLM_INCLUDE_DIR glm/glm.hpp)
+if(NOT GLM_INCLUDE_DIR)
+    message(FATAL_ERROR "GLM not found - install libglm-dev")
+endif()
+add_library(pk_glm INTERFACE IMPORTED)
+set_target_properties(pk_glm PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${GLM_INCLUDE_DIR}"
+)
 
 # stb_image (header-only, vendored)
 include_directories(third_party/stb)

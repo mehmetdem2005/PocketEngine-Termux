@@ -304,7 +304,6 @@ void Editor::drawInspectorPanel() noexcept {
         if (ImGui::InputText("Name", buf, sizeof(buf))) {
             tag->name = buf;
         }
-        ImGui::Checkbox("Active", &tag->name.empty());  // placeholder
     }
 
     if (auto* t = m_scene.world.get<ecs::Transform>(m_selectedEntity)) {
@@ -454,7 +453,7 @@ void Editor::drawAssetBrowserPanel() noexcept {
                                                   IM_COL32(80, 80, 90, 200));
         ImGui::Dummy(ImVec2(sz, sz));
         ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + sz);
-        ImGui::TextUnanimated(assets[i].name.c_str());
+        ImGui::TextUnformatted(assets[i].name.c_str());
         ImGui::PopTextWrapPos();
         ImGui::EndGroup();
     }
