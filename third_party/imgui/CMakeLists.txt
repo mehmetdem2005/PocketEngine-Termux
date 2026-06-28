@@ -26,6 +26,25 @@ set(IMGUI_SOURCES
 
 add_library(imgui STATIC ${IMGUI_SOURCES})
 
+# ImGui is third-party - disable strict warnings for its TU
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    target_compile_options(imgui PRIVATE
+        -Wno-old-style-cast
+        -Wno-sign-conversion
+        -Wno-conversion
+        -Wno-cast-align
+        -Wno-shadow
+        -Wno-pedantic
+        -Wno-missing-field-initializers
+        -Wno-implicit-fallthrough
+        -Wno-unused-parameter
+        -Wno-double-promotion
+        -Wno-non-virtual-dtor
+        -Wno-overloaded-virtual
+        -Wno-deprecated-declarations
+    )
+endif()
+
 target_include_directories(imgui PUBLIC
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
