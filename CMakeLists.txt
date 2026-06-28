@@ -84,11 +84,14 @@ else()
 endif()
 
 # GLFW for windowing (X11 via Termux:X11)
-# Debian provides libglfw3-dev but no CMake config - find manually
-find_path(GLFW3_INCLUDE_DIR GLFW/glfw3.h)
-find_library(GLFW3_LIBRARY glfw3)
+# Try find_package first, fall back to pkg-config, then manual find
+find_path(GLFW3_INCLUDE_DIR GLFW/glfw3.h
+    PATHS /usr/include /usr/local/include /opt/vc/include)
+find_library(GLFW3_LIBRARY
+    NAMES glfw3 glfw
+    PATHS /usr/lib /usr/lib/${CMAKE_LIBRARY_ARCHITECTURE} /usr/local/lib /opt/vc/lib)
 if(NOT GLFW3_INCLUDE_DIR OR NOT GLFW3_LIBRARY)
-    message(FATAL_ERROR "GLFW3 not found - install libglfw3-dev")
+    message(FATAL_ERROR "GLFW3 not found - run: apt-get install -y libglfw3-dev")
 endif()
 add_library(pk_glfw3 INTERFACE IMPORTED)
 set_target_properties(pk_glfw3 PROPERTIES
@@ -97,9 +100,10 @@ set_target_properties(pk_glfw3 PROPERTIES
 )
 
 # GLM (math) - header-only
-find_path(GLM_INCLUDE_DIR glm/glm.hpp)
+find_path(GLM_INCLUDE_DIR glm/glm.hpp
+    PATHS /usr/include /usr/local/include)
 if(NOT GLM_INCLUDE_DIR)
-    message(FATAL_ERROR "GLM not found - install libglm-dev")
+    message(FATAL_ERROR "GLM not found - run: apt-get install -y libglm-dev")
 endif()
 add_library(pk_glm INTERFACE IMPORTED)
 set_target_properties(pk_glm PROPERTIES
