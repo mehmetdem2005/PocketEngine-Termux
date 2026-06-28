@@ -136,17 +136,16 @@ Renderer2D::~Renderer2D() { shutdown(); }
 bool Renderer2D::init(i32 fbWidth, i32 fbHeight) noexcept {
     if (m_inited) return true;
 
-    PK_LOG_INFO("Renderer", "Initializing Renderer2D (GL=%s)",
 #ifdef POCKET_GLES3
-        "GLES3"
+    constexpr const char* kGlName = "GLES3";
 #else
-        "GL"
+    constexpr const char* kGlName = "GL";
 #endif
-    );
+    PK_LOG_INFO("Renderer", "Initializing Renderer2D (GL=%s)", kGlName);
 
-    PK_LOG_INFO("Renderer", "GL_VERSION: %s", (const char*)glGetString(GL_VERSION));
-    PK_LOG_INFO("Renderer", "GL_RENDERER: %s", (const char*)glGetString(GL_RENDERER));
-    PK_LOG_INFO("Renderer", "GL_VENDOR: %s", (const char*)glGetString(GL_VENDOR));
+    PK_LOG_INFO("Renderer", "GL_VERSION: %s", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
+    PK_LOG_INFO("Renderer", "GL_RENDERER: %s", reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
+    PK_LOG_INFO("Renderer", "GL_VENDOR: %s", reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
 
     initShaders();
     initBuffers();
