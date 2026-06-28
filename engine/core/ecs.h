@@ -146,32 +146,44 @@ public:
     }
 
     // Iterate all entities that have ALL of Ts...
-    // Driver-based: iterate first type's dense array, lookup others.
+    // Simple, safe implementation. Use first type as driver.
     template <typename... Ts, typename Fn>
     void each(Fn&& fn) noexcept {
-        // Use first type as driver
+        // Single-type fast path
+        if constexpr (sizeof...(Ts) == 1) {
+            using T = std::tuple_element_t<0, std::tuple<Ts...>>;
+            auto* store = findStore<T>();
+            if (!store) return;
+            auto& data = store->data();
+            auto& ids  = store->denseIds();
+            for (usize i = 0; i < data.size(); ++i) {
+                fn(EntityID{ids[i]}, data[i]);
+            }
+            return;
+        }
+
+        // Multi-type path: iterate first type, lookup others
         using First = std::tuple_element_t<0, std::tuple<Ts...>>;
         ComponentStore<First>* driver = findStore<First>();
         if (!driver) return;
 
-        // Get all stores (must exist)
-        auto stores_tuple = std::make_tuple(findStore<Ts>()...);
-        bool all_present = std::apply([](auto*... s) { return (... && (s != nullptr)); }, stores_tuple);
+        // Get pointer to each store
+        std::tuple<ComponentStore<Ts>*...> stores{findStore<Ts>()...};
+        bool all_present = std::apply([](auto*... s) { return (... && (s != nullptr)); }, stores);
         if (!all_present) return;
 
-        // Iterate driver's dense id list
-        const auto& dense_ids = driver->denseIds();
-        for (usize i = 0; i < dense_ids.size(); ++i) {
-            u64 eid = dense_ids[i];
-            // For each type, get component pointer
-            auto ptrs_tuple = std::make_tuple(
-                std::get<ComponentStore<Ts>*>(stores_tuple)->get(eid)...
-            );
+        auto& driver_ids = driver->denseIds();
+        for (usize i = 0; i < driver_ids.size(); ++i) {
+            u64 eid = driver_ids[i];
+            // Get all components for this entity
+            auto ptrs = std::apply([eid](auto*... s) {
+                return std::make_tuple(s->get(eid)...);
+            }, stores);
             // Check all non-null
-            bool ok = std::apply([](auto*... p) { return (... && (p != nullptr)); }, ptrs_tuple);
+            bool ok = std::apply([](auto*... p) { return (... && (p != nullptr)); }, ptrs);
             if (!ok) continue;
-            // Call fn with entity + all components dereferenced
-            std::apply([&](auto*... p) { fn(EntityID{eid}, *p...); }, ptrs_tuple);
+            // Dereference and call
+            std::apply([&](auto*... p) { fn(EntityID{eid}, *p...); }, ptrs);
         }
     }
 

@@ -91,6 +91,9 @@ void Editor::run() noexcept {
     f32 camX = 0, camY = 0;
     f32 camZoom = 5.0f;
 
+    PK_LOG_INFO("Editor", "run() entered - starting main loop");
+    int frameCount = 0;
+
     while (!window.shouldClose()) {
         window.pollEvents();
 
@@ -105,6 +108,8 @@ void Editor::run() noexcept {
         drawMainMenuBar();
         drawToolbar();
 
+        PK_LOG_DEBUG("Editor", "frame %d: drew menu/toolbar", frameCount);
+
         if (m_showHierarchy)      drawHierarchyPanel();
         if (m_showInspector)      drawInspectorPanel();
         if (m_showSceneView)      drawSceneView();
@@ -113,6 +118,8 @@ void Editor::run() noexcept {
         if (m_showConsole)        drawConsolePanel();
         if (m_showProfiler)       drawProfilerPanel();
         drawStatusBar();
+
+        PK_LOG_DEBUG("Editor", "frame %d: drew all panels", frameCount);
 
         if (m_showImGuiDemo) ImGui::ShowDemoWindow();
 
@@ -124,6 +131,7 @@ void Editor::run() noexcept {
                               -100, 100);
 
         rdr.beginScene(vp);
+        PK_LOG_DEBUG("Editor", "frame %d: rendering %zu sprites", frameCount, m_scene.world.entityCount());
         // Render all sprites
         m_scene.world.each<ecs::Transform, ecs::Sprite>(
             [&](EntityID, ecs::Transform& t, ecs::Sprite& s) {
@@ -133,6 +141,7 @@ void Editor::run() noexcept {
                                s.u0, s.v0, s.u1, s.v1,
                                math::Vec4(s.color[0], s.color[1], s.color[2], s.color[3]));
             });
+        PK_LOG_DEBUG("Editor", "frame %d: sprites rendered", frameCount);
         rdr.endScene();
 
         // Camera controls
@@ -144,6 +153,7 @@ void Editor::run() noexcept {
         ui::endImGuiFrame();
 
         window.swapBuffers();
+        frameCount++;
     }
 }
 
