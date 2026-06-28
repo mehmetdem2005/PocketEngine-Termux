@@ -96,19 +96,27 @@ void Editor::run() noexcept {
 
     while (!window.shouldClose()) {
         window.pollEvents();
+        PK_LOG_DEBUG("Editor", "frame %d: after pollEvents", frameCount);
 
         auto fb = window.framebufferSize();
         rdr.setViewport(0, 0, fb.x, fb.y);
         rdr.setClearColor(0.05f, 0.05f, 0.07f, 1.0f);
         rdr.clear();
+        PK_LOG_DEBUG("Editor", "frame %d: after clear", frameCount);
 
         // Begin ImGui
         ui::beginImGuiFrame();
+        PK_LOG_DEBUG("Editor", "frame %d: after beginImGuiFrame", frameCount);
+
+        // TEST: minimal - just show a demo window to verify ImGui works
+        ImGui::ShowDemoWindow();
+        PK_LOG_DEBUG("Editor", "frame %d: after ShowDemoWindow", frameCount);
+
+        // Skip the rest for now - isolate the crash
+#if 0
         dockspaceLayout();
         drawMainMenuBar();
         drawToolbar();
-
-        PK_LOG_DEBUG("Editor", "frame %d: drew menu/toolbar", frameCount);
 
         if (m_showHierarchy)      drawHierarchyPanel();
         if (m_showInspector)      drawInspectorPanel();
@@ -118,8 +126,6 @@ void Editor::run() noexcept {
         if (m_showConsole)        drawConsolePanel();
         if (m_showProfiler)       drawProfilerPanel();
         drawStatusBar();
-
-        PK_LOG_DEBUG("Editor", "frame %d: drew all panels", frameCount);
 
         if (m_showImGuiDemo) ImGui::ShowDemoWindow();
 
@@ -131,7 +137,6 @@ void Editor::run() noexcept {
                               -100, 100);
 
         rdr.beginScene(vp);
-        PK_LOG_DEBUG("Editor", "frame %d: rendering %zu sprites", frameCount, m_scene.world.entityCount());
         // Render all sprites
         m_scene.world.each<ecs::Transform, ecs::Sprite>(
             [&](EntityID, ecs::Transform& t, ecs::Sprite& s) {
@@ -141,7 +146,6 @@ void Editor::run() noexcept {
                                s.u0, s.v0, s.u1, s.v1,
                                math::Vec4(s.color[0], s.color[1], s.color[2], s.color[3]));
             });
-        PK_LOG_DEBUG("Editor", "frame %d: sprites rendered", frameCount);
         rdr.endScene();
 
         // Camera controls
@@ -149,11 +153,20 @@ void Editor::run() noexcept {
         if (window.keyPressed(263)) camX -= 0.05f;   // left
         if (window.keyPressed(265)) camY += 0.05f;   // up
         if (window.keyPressed(264)) camY -= 0.05f;   // down
+#endif
 
         ui::endImGuiFrame();
+        PK_LOG_DEBUG("Editor", "frame %d: after endImGuiFrame", frameCount);
 
         window.swapBuffers();
+        PK_LOG_DEBUG("Editor", "frame %d: after swapBuffers", frameCount);
         frameCount++;
+
+        // Safety: stop after 5 frames to see logs
+        if (frameCount >= 5) {
+            PK_LOG_INFO("Editor", "Survived 5 frames - success!");
+            break;
+        }
     }
 }
 
